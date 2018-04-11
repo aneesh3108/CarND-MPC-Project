@@ -1,6 +1,39 @@
 # CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
 
+## Rubric Reflections 
+
+* Student describes their model in detail. This includes the state, actuators and update equations.
+
+The model used is the *kinematic model* presented in class. The state is composed of six variables: position of the vehicle (x, y), orientation of the vehicle (psi), linear velocity of the vehicle (v), cross track error (CTE), the difference between current orientation and the desired orientation (epsi). 
+
+There are two actuators: Steer value, Throttle value. *Steer value* is the steering angle (delta) and *throttle* is the acceleration and braking, whichever is desired. 
+
+The equations for the update between two timesteps *t* and *t-1* separated by *dt* is as follows:
+
+![Update Equations](https://github.com/hectorratia/CarND-MPC-Project/blob/master/updateequations.png?raw=true "Update equations")
+
+* Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
+
+Different set of values were experiment on: 10, 0.1 (most basic); 15; 0.15; 6, 0.20; 70, 0.17 and many others. Finally, we stick with the interval *dt=0.1* and *N = 10*.
+It was observed that a value of N > 70 messed up the entire chain caused due to latency issues (wrong behavior) and hence were never tried.
+
+* A polynomial is fitted to waypoints. If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
+
+As suggested in the lectures and Udacity hints, the waypoints are preprocessed in the sense: they are transformed to the vehicle's origin as this simpliflies the polyfit process. 
+
+* The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
+
+Since the kinematic model equations originally depended on the actuations in the previous timestep and the difference between the two timesteps is the interval chosen, we account for the case by taking into consideration the previous actuations and hence tackle the 100 ms latency. Note: This is the second reason for choosing dt = 0.1, else this looophole is not possible easily. 
+
+* No tire may leave the drivable portion of the track surface. The car may not pop up onto ledges or roll over any surfaces that would otherwise be considered unsafe (if humans were in the vehicle). The car can't go over the curb, but, driving on the lines before the curb is ok.
+
+This works! 
+A youtube video showing the fully working simulation can be found here: https:/youtu.be/GyM50Mtlx6Y
+
+
+
+
 ---
 
 ## Dependencies
