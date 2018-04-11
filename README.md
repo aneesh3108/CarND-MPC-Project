@@ -29,7 +29,7 @@ Since the kinematic model equations originally depended on the actuations in the
 * No tire may leave the drivable portion of the track surface. The car may not pop up onto ledges or roll over any surfaces that would otherwise be considered unsafe (if humans were in the vehicle). The car can't go over the curb, but, driving on the lines before the curb is ok.
 
 This works! 
-A youtube video showing the fully working simulation can be found [here](https:/youtu.be/GyM50Mtlx6Y)
+A youtube video showing the fully working simulation can be found [here](https://www.youtube.com/watch?v=GyM50Mtlx6YY)
 
 ---
 
