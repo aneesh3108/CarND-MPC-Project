@@ -65,6 +65,8 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+
+//Ref: https://github.com/sohonisaurabh/CarND-MPC-Project, https://github.com/jeremyshannon/CarND-MPC-Project for debugging and fixing "segmentation fault" issues during preliminary runs
 int main() {
   uWS::Hub h;
 
@@ -77,7 +79,8 @@ int main() {
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
     string sdata = string(data).substr(0, length);
-    cout << sdata << endl;
+    //cout << sdata << endl;
+    // commented to maintain cleanliness post successful runs
     if (sdata.size() > 2 && sdata[0] == '4' && sdata[1] == '2') {
       string s = hasData(sdata);
       if (s != "") {
@@ -98,8 +101,46 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          double steer_value;
-          double throttle_value;
+          //double steer_value;
+          //double throttle_value;
+
+	  double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+
+	  vector<double> wayp_x;
+          vector<double> wayp_y;
+
+          // transform waypoints to be from car's perspective
+          // this means we can consider px = 0, py = 0, and psi = 0
+          // greatly simplifying future calculations
+          for (int i = 0; i < ptsx.size(); i++){
+            double dx = ptsx[i] - px;
+            double dy = ptsy[i] - py;
+            wayp_x.push_back(dx * cos(-psi) - dy * sin(-psi));
+            wayp_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+          }
+
+          double* ptrx = &wayp_x[0];
+          double* ptry = &wayp_y[0];
+          
+	  Eigen::Map<Eigen::VectorXd> eig_wayp_x(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> eig_wayp_y(ptry, 6);
+
+          auto coeffs = polyfit(eig_wayp_x, eig_wayp_y, 3);
+          
+          double cte = polyeval(coeffs, 0);  
+          double epsi = - atan(coeffs[1]);  
+
+          Eigen::VectorXd state(6);
+          state << 0, 0, 0, v, cte, epsi;
+          
+	  Eigen::VectorXd weights(8); 
+ 	  weights << 3500, 3500, 1, 5, 5, 600, 300, 20;
+
+	  // obtaining the new sets of steer value
+	  auto vars = mpc.Solve(state, coeffs, weights);
+          steer_value = vars[0];
+          throttle_value = vars[1];
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
@@ -113,6 +154,15 @@ int main() {
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
+	
+	  for (int i = 2; i < vars.size(); i ++) {
+            if (i%2 == 0) {
+              mpc_x_vals.push_back(vars[i]);
+            }
+            else {
+              mpc_y_vals.push_back(vars[i]);
+            }
+          }
 
           msgJson["mpc_x"] = mpc_x_vals;
           msgJson["mpc_y"] = mpc_y_vals;
@@ -124,12 +174,18 @@ int main() {
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
 
+	  for (double i = 0; i < 100; i += 3){
+            next_x_vals.push_back(i);
+            next_y_vals.push_back(polyeval(coeffs, i));
+          }
+
           msgJson["next_x"] = next_x_vals;
           msgJson["next_y"] = next_y_vals;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          //std::cout << msg << std::endl;
+	  // commented to maintain cleaniness post successful runs
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
